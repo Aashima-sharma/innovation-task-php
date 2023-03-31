@@ -10,17 +10,7 @@ pipeline {
             }
         }
         
-         stage('Tag images') {
-             steps {
-                 script {
-                     sh '''
-                         docker tag mysql:5.7 mysql:$BUILD_NUMBER
-                         docker tag php-mysql-demo:1.0.0 php-mysql-demo:$BUILD_NUMBER
-                         docker tag phpmyadmin/phpmyadmin:4.7 phpmyadmin/phpmyadmin:$BUILD_NUMBER
-                     '''
-                 }
-             }
-         }
+
         
         stage('Clear space') {
            steps {
@@ -39,6 +29,20 @@ pipeline {
                 sh "docker-compose up -d --build"
             }
         }
+        
+       
+        stage('Tag images') {
+             steps {
+                 script {
+                     sh '''
+                         docker tag mysql:5.7 mysql:$BUILD_NUMBER
+                         docker tag php-mysql-demo:1.0.0 php-mysql-demo:$BUILD_NUMBER
+                         docker tag phpmyadmin/phpmyadmin:4.7 phpmyadmin/phpmyadmin:$BUILD_NUMBER
+                     '''
+                 }
+             }
+         }
     }
+    
 }
 
