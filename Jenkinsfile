@@ -16,9 +16,9 @@ pipeline {
            steps {
                script {
                    sh '''
-                       docker rmi mysql:5.7
-                       docker rmi php-mysql-demo:1.0.0
-                       docker rmi phpmyadmin/phpmyadmin:4.7
+                       docker rmi -f mysql:5.7
+                       docker rmi -f php-mysql-demo:1.0.0
+                       docker rmi -f phpmyadmin/phpmyadmin:4.7
                    '''
                  }
              }
