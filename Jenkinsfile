@@ -9,19 +9,25 @@ pipeline {
                 }
             }
         }
-        
+  
+        stage('Tag images and remove old ones') {
+            steps {
+                script {
+                    // Tag images
+                    sh '''
+                        docker tag mysql:5.7 mysql:$BUILD_NUMBER
+                        docker tag php-mysql-demo:1.0.0 php-mysql-demo:$BUILD_NUMBER
+                        docker tag phpmyadmin/phpmyadmin:4.7 phpmyadmin/phpmyadmin:$BUILD_NUMBER
+                    '''
 
-        
-        stage('Clear space') {
-           steps {
-               script {
-                   sh '''
-                       docker rmi -f mysql:5.7
-                       docker rmi -f php-mysql-demo:1.0.0
-                       docker rmi -f phpmyadmin/phpmyadmin:4.7
-                   '''
-                 }
-             }
+                    // Remove old tagged images
+                    sh '''
+                        docker rmi mysql:latest
+                        docker rmi php-mysql-demo:latest
+                        docker rmi phpmyadmin/phpmyadmin:latest
+                    '''
+                }
+            }
         }
 
         stage('Build') {
@@ -29,20 +35,5 @@ pipeline {
                 sh "docker-compose up -d --build"
             }
         }
-        
-       
-        stage('Tag images') {
-             steps {
-                 script {
-                     sh '''
-                         docker tag mysql:5.7 mysql:$BUILD_NUMBER
-                         docker tag php-mysql-demo:1.0.0 php-mysql-demo:$BUILD_NUMBER
-                         docker tag phpmyadmin/phpmyadmin:4.7 phpmyadmin/phpmyadmin:$BUILD_NUMBER
-                     '''
-                 }
-             }
-         }
     }
-    
 }
-
