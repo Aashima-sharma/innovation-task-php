@@ -19,7 +19,7 @@ pipeline {
         }
         
         
-      stage('Tag images and remove old ones') {
+        stage('Tag images and remove old ones') {
             steps {
                 script {
                     // Tag images
@@ -29,11 +29,9 @@ pipeline {
                         docker tag phpmyadmin/phpmyadmin:4.7 phpmyadmin/phpmyadmin:$BUILD_NUMBER
                     '''
 
-                    // Remove old tagged images
+                    // Remove old images
                     sh '''
-                        docker rmi mysql:latest
-                        docker rmi php-mysql-demo:latest
-                        docker rmi phpmyadmin/phpmyadmin:latest
+                        docker images | grep -v $BUILD_NUMBER | awk '{if ($1 ~ /^(mysql|php-mysql-demo|phpmyadmin\/phpmyadmin)$/) print $1":"$2}' | xargs -r docker rmi -f
                     '''
                 }
             }
