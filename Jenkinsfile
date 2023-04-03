@@ -31,7 +31,7 @@ pipeline {
 
                     // Remove old images
                     sh '''
-                        docker images | grep -v $BUILD_NUMBER | awk '{if ($1 ~ /^(mysql|php-mysql-demo|phpmyadmin/phpmyadmin)$/) print $1":"$2}' | xargs -r docker rmi -f
+                        docker images | grep -v $BUILD_NUMBER | awk '{if ($1 ~ /^(mysql|php-mysql-demo|phpmyadmin\/phpmyadmin)$/) print $1":"$2}' | xargs -r docker rmi -f
                     '''
                 }
             }
