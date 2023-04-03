@@ -10,7 +10,16 @@ pipeline {
             }
         }
   
-        stage('Tag images and remove old ones') {
+        
+
+        stage('Build') {
+            steps {
+                sh "docker-compose up -d --build"
+            }
+        }
+        
+        
+      stage('Tag images and remove old ones') {
             steps {
                 script {
                     // Tag images
@@ -27,12 +36,6 @@ pipeline {
                         docker rmi phpmyadmin/phpmyadmin:latest
                     '''
                 }
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh "docker-compose up -d --build"
             }
         }
     }
