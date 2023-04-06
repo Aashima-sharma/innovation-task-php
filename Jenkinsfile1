@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+
+    environment {
+        NEXUS_URL = "http://192.168.6.190:8082"
+        NEXUS_CREDENTIALS = "Nexus"
+        NEXUS_REPO = "192.168.6.190:8082"
+    }
+    
+    stages {
+        stage('Git Checkout') {
+            steps {
+                script {
+                    git branch: 'testing', url: 'http://192.168.6.186/root/fullstack-devsecops.git'
+                }
+            }
+        }
+  
+        
+
+        stage('Build') {
+            steps {
+                sh "docker-compose up -d --build"
+            }
+        }
+        
+        
+stage('Tag images and remove old ones') {
+    steps {
+        script {
+
+          
+            // Tag images to upload on Nexus private docker registry     
+            sh '''
+                docker tag mysql:5.7 $NEXUS_REPO/mysql:$BUILD_NUMBER
+                docker tag php-mysql-demo:1.0.0 $NEXUS_REPO/php-mysql-demo:$BUILD_NUMBER
+                docker tag phpmyadmin/phpmyadmin:4.7 $NEXUS_REPO/phpmyadmin/phpmyadmin:$BUILD_NUMBER
+            '''
+      
+            sh '''
+                docker images | grep -v $BUILD_NUMBER | awk '{if ($1 ~ /^(mysql|php-mysql-demo|phpmyadmin\\/phpmyadmin)$/) print $1":"$2}' | xargs -r docker rmi -f
+            '''
+
+            // Remove nexus repo tag images
+            sh '''
+    
+                # Set the current image name
+                CURRENT_IMAGE_PMD=$NEXUS_REPO/php-mysql-demo:$BUILD_NUMBER
+                CURRENT_IMAGE_MS=$NEXUS_REPO/mysql:$BUILD_NUMBER
+                CURRENT_IMAGE_PHP=$NEXUS_REPO/phpmyadmin/phpmyadmin:$BUILD_NUMBER	
+    
+    
+                # List all Docker images with tags
+                DOCKER_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}")
+
+                # Loop through the images and delete any except the current image with the current build number
+                for IMAGE in $DOCKER_IMAGES; do
+                    if [ "$IMAGE" != "$CURRENT_IMAGE_PMD" ] && [ "$IMAGE" != "$CURRENT_IMAGE_MS" ] && [ "$IMAGE" != "$CURRENT_IMAGE_PHP" ]; then
+                        docker rmi $IMAGE
+                    fi
+                done
+            '''
+
+        }
+    }
+}
+
+    
+        stage('Push to Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS, usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    script {
+
+                        //tag images to upload on nexus docker private registry
+
+                        sh "docker login -u $NEXUS_USERNAME -p $NEXUS_PASSWORD $NEXUS_URL"
+                        sh "docker push $NEXUS_REPO/mysql:$BUILD_NUMBER"
+                        sh "docker push $NEXUS_REPO/php-mysql-demo:$BUILD_NUMBER"
+                        sh "docker push $NEXUS_REPO/phpmyadmin/phpmyadmin:$BUILD_NUMBER"
+                    }
+                }
+            }
+        }   
+    }
+}
